@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Drawer, Box, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { IconButton, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Alert, FormControl, InputLabel, Select, MenuItem, IconButton, TextField } from '@mui/material';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 const RightDrawer = ({ open, onClose }) => {
     const options = [
@@ -13,11 +13,14 @@ const RightDrawer = ({ open, onClose }) => {
         { label: 'City', value: 'city' },
         { label: 'State', value: 'state' },
     ];
-
+    const webhookURL = 'https://webhook.site/99c0cd3e-56b1-473e-a0c3-48a7538939e5';
     const [selectedValue, setSelectedValue] = useState('');
     const [dropdowns, setDropdowns] = useState([]);
     const [selectedOptions, setSelectedOptions] = useState([]);
     const [segmentName, setSegmentName] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState('success');
+    const [showAlert, setShowAlert] = useState(false);
 
     const handleSelectChange = (event) => {
         setSelectedValue(event.target.value);
@@ -31,7 +34,13 @@ const RightDrawer = ({ open, onClose }) => {
             setSelectedValue('');
         }
     };
-
+    const handleCancel = () => {
+        onClose()
+        setDropdowns([]);
+        setSelectedOptions([]);
+        setSelectedValue('');
+        setSegmentName('')
+    };
     const getRemainingOptions = () => {
         return options.filter(opt => !selectedOptions.includes(opt.value));
     };
@@ -42,19 +51,48 @@ const RightDrawer = ({ open, onClose }) => {
         setSelectedOptions(updatedSelectedOptions);
     };
     const handleSaveSegment = () => {
+
         const formattedData = {
             segment_name: segmentName,
-            schema: dropdowns
+            schema: dropdowns,
         };
-        console.log(JSON.stringify(formattedData));
+
+        console.log(formattedData);
+
+        fetch(webhookURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            mode: 'no-cors',
+            body: JSON.stringify(formattedData),
+        })
+            .then(() => {
+                setAlertMessage('Segment saved successfully!');
+                setAlertType('success');
+                setShowAlert(true);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                setAlertMessage('Failed to save segment. Please try again.');
+                setAlertType('error');
+                setShowAlert(true);
+            });
     };
+
 
     return (
         <Drawer
             anchor="right"
             open={open}
             onClose={onClose}
+
         >
+            {showAlert && (
+                <Alert severity={alertType} onClose={() => setShowAlert(false)}>
+                    {alertMessage}
+                </Alert>
+            )}
             <Box
                 sx={{
                     width: 500,
@@ -75,19 +113,19 @@ const RightDrawer = ({ open, onClose }) => {
                 </IconButton>
                 <Typography variant="h6" sx={{ color: "white" }}>Saving segment</Typography>
             </Box>
-            <Box sx={{ height: "100vh", overflow: 'auto' }}>
+            <Box sx={{ overflowY: 'auto', height: '67%' }}>
                 <Box sx={{ padding: 2 }}>
-                    <Typography>Enter the name of the segment</Typography>
+                    <Typography sx={{ fontWeight: 600 }}>Enter the name of the segment</Typography>
                     <TextField
                         label="Name of the segment"
                         variant="outlined"
                         margin="normal"
                         size='small'
-                        sx={{ width: "100%" }}
+                        sx={{ width: "100%", marginBottom: "20px" }}
                         value={segmentName}
                         onChange={(e) => setSegmentName(e.target.value)}
                     />
-                    <Typography variant="inherit">
+                    <Typography variant="inherit" sx={{ marginBottom: "20px" }}>
                         To save your segment, you need to add the schemas to build the Query
                     </Typography>
                     <div className='content'>
@@ -165,20 +203,23 @@ const RightDrawer = ({ open, onClose }) => {
                     </FormControl>
                     <Typography
                         variant="inherit"
-                        sx={{ color: "#3eb188", textDecoration: "underline", cursor: "pointer" }}
+                        sx={{ color: "#3eb188", cursor: "pointer" }}
                         onClick={addNewDropdown}
                     >
-                        + Add new Schema
+                        + <span style={{ textDecoration: "underline" }}>Add new Schema</span>
                     </Typography>
                 </Box>
+
             </Box>
             <Box sx={{
-                position: 'fixed', bottom: 0,
+                position: "fixed",
+                bottom: 0,
                 width: '-webkit-fill-available',
                 padding: 2, backgroundColor: '#f0f0f0',
                 textAlign: 'center',
                 display: "flex",
-                gap: "10px"
+                gap: "10px",
+                zIndex: 1,
             }}>
                 <button className='button_element'
                     onClick={handleSaveSegment}
@@ -186,10 +227,10 @@ const RightDrawer = ({ open, onClose }) => {
                     Save the Segment
                 </button>
                 <button className='button_element_cncl'
-                    style={{ color: "red" }}
-                    onClick={onClose}
+                    style={{ color: "red", cursor: 'pointer' }}
+                    onClick={handleCancel}
                 >
-                    Cancle
+                    Cancel
                 </button>
             </Box>
         </Drawer>

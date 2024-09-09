@@ -39,6 +39,7 @@
 .content {
   display: flex;
   justify-content: flex-end;
+  margin-bottom: 20px;
 }
 
 .sub-content {
@@ -69,10 +70,10 @@
   border-radius: 3px;
   font-size: 11px;
   color: white;
+  cursor: pointer;
 }
 .button_element .button_element_cncl{
   height: 30px;
- 
   border: 0;
   border-radius: 3px;
   font-size: 11px;
